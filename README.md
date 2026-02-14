@@ -63,6 +63,7 @@ npm install
 1. In your Supabase dashboard, go to **SQL Editor**.
 2. Paste the contents of `supabase/migration.sql` and run it.
 3. This creates the `bookmarks` table with RLS policies and enables Realtime.
+4. If your project already ran `migration.sql` earlier, run `supabase/migration_profile.sql` to add profile features safely.
 
 ### 4. Configure Google OAuth
 
@@ -85,6 +86,7 @@ Create a `.env.local` file in the project root:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=true
 ```
 
 ### 6. Run Locally
@@ -107,6 +109,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 4. In the **Environment Variables** section, add:
    - `NEXT_PUBLIC_SUPABASE_URL` → your Supabase project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` → your Supabase anon key
+   - `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` → `true`
 5. Click **Deploy**.
 6. After deployment, copy the live URL (e.g., `https://smart-bookmark-app.vercel.app`).
 7. **Important:** Add the Vercel URL to your Google OAuth Authorized redirect URIs:

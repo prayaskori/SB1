@@ -9,7 +9,7 @@ import {
   LogOut,
   Moon,
   Sun,
-  User,
+  Settings,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,11 +24,26 @@ import {
 
 interface HeaderProps {
   userEmail: string;
+  displayName?: string | null;
+  avatarUrl?: string | null;
 }
 
-export default function Header({ userEmail }: HeaderProps) {
+function getInitials(displayName: string | null | undefined, email: string) {
+  if (displayName && displayName.trim()) {
+    return displayName
+      .trim()
+      .split(/\s+/)
+      .map((p) => p[0]?.toUpperCase() ?? "")
+      .join("")
+      .slice(0, 2);
+  }
+
+  return email.slice(0, 2).toUpperCase();
+}
+
+export default function Header({ userEmail, displayName, avatarUrl }: HeaderProps) {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   const [loading, setLoading] = useState(false);
 
   const handleSignOut = async () => {
@@ -54,7 +69,9 @@ export default function Header({ userEmail }: HeaderProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            onClick={() =>
+              setTheme(resolvedTheme === "dark" ? "light" : "dark")
+            }
             className="h-9 w-9"
           >
             <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -68,11 +85,21 @@ export default function Header({ userEmail }: HeaderProps) {
                 variant="ghost"
                 className="h-9 gap-2 px-2 sm:px-3"
               >
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
-                  <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-blue-100 dark:bg-blue-900/30">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt={displayName || userEmail}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-[10px] font-semibold text-blue-700 dark:text-blue-300">
+                      {getInitials(displayName, userEmail)}
+                    </span>
+                  )}
                 </div>
                 <span className="hidden max-w-[150px] truncate text-sm sm:inline">
-                  {userEmail}
+                  {displayName?.trim() || userEmail}
                 </span>
               </Button>
             </DropdownMenuTrigger>
@@ -80,11 +107,21 @@ export default function Header({ userEmail }: HeaderProps) {
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">Account</p>
+                  {displayName?.trim() ? (
+                    <p className="text-xs leading-none text-gray-500 dark:text-gray-400 truncate">
+                      {displayName}
+                    </p>
+                  ) : null}
                   <p className="text-xs leading-none text-gray-500 dark:text-gray-400 truncate">
                     {userEmail}
                   </p>
                 </div>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => router.push("/profile")}>
+                <Settings className="mr-2 h-4 w-4" />
+                Profile Settings
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={handleSignOut}

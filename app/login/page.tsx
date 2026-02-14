@@ -210,33 +210,37 @@ export default function LoginPage() {
                 </Button>
               )}
 
-              <form onSubmit={handleEmailLogin} className="mt-4 space-y-3">
-                <Input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                />
-                <Button
-                  type="submit"
-                  disabled={emailLoading || googleLoading}
-                  className="w-full h-12 text-base gap-2"
-                >
-                  {emailLoading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <Mail className="h-5 w-5" />
-                  )}
-                  {emailLoading ? "Sending link..." : "Continue with Email"}
-                </Button>
-              </form>
+              {!googleEnabled && (
+                <>
+                  <form onSubmit={handleEmailLogin} className="mt-4 space-y-3">
+                    <Input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      autoComplete="email"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={emailLoading || googleLoading}
+                      className="w-full h-12 text-base gap-2"
+                    >
+                      {emailLoading ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Mail className="h-5 w-5" />
+                      )}
+                      {emailLoading ? "Sending link..." : "Continue with Email"}
+                    </Button>
+                  </form>
 
-              {emailSent && (
-                <p className="mt-3 text-sm text-green-700 dark:text-green-400">
-                  Check your email for the sign-in link.
-                </p>
+                  {emailSent && (
+                    <p className="mt-3 text-sm text-green-700 dark:text-green-400">
+                      Check your email for the sign-in link.
+                    </p>
+                  )}
+                </>
               )}
 
               <p className="mt-6 text-center text-xs text-gray-400 dark:text-gray-500">

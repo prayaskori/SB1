@@ -1,43 +1,9 @@
 -- ============================================
--- Smart Bookmark App — Database Migration
+-- Smart Bookmark App - Profile Features
+-- Incremental migration for existing projects
 -- ============================================
 
--- 1. Create the bookmarks table
-CREATE TABLE IF NOT EXISTS public.bookmarks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  url TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- 2. Enable Row Level Security
-ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
-
--- 3. RLS Policies
-
--- SELECT: Users can only view their own bookmarks
-CREATE POLICY "Users can view own bookmarks"
-  ON public.bookmarks
-  FOR SELECT
-  USING (auth.uid() = user_id);
-
--- INSERT: Users can only insert bookmarks for themselves
-CREATE POLICY "Users can insert own bookmarks"
-  ON public.bookmarks
-  FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
--- DELETE: Users can only delete their own bookmarks
-CREATE POLICY "Users can delete own bookmarks"
-  ON public.bookmarks
-  FOR DELETE
-  USING (auth.uid() = user_id);
-
--- 4. Enable Realtime for bookmarks table
-ALTER PUBLICATION supabase_realtime ADD TABLE public.bookmarks;
-
--- 5. Create profiles table for user profile data
+-- 1. Create profiles table
 CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT,
@@ -46,7 +12,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- 6. Keep updated_at fresh on profile updates
+-- 2. Keep updated_at fresh on updates
 CREATE OR REPLACE FUNCTION public.set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -61,7 +27,7 @@ CREATE TRIGGER set_profiles_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.set_updated_at();
 
--- 7. Auto-create profile rows for new users
+-- 3. Auto-create profile row for new auth users
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
 SECURITY DEFINER
@@ -86,7 +52,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_new_user();
 
--- 8. Enable RLS on profiles
+-- 4. Enable RLS and policies
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can view own profile" ON public.profiles;
@@ -108,5 +74,29 @@ CREATE POLICY "Users can update own profile"
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
--- 9. Enable Realtime for profiles table
-ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
+-- 5. Enable realtime for profiles table (safe if already added)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+      AND schemaname = 'public'
+      AND tablename = 'profiles'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
+  END IF;
+END;
+$$;
+
+-- 6. Backfill profile rows for existing users
+INSERT INTO public.profiles (id, full_name, avatar_url)
+SELECT
+  u.id,
+  u.raw_user_meta_data ->> 'full_name',
+  u.raw_user_meta_data ->> 'avatar_url'
+FROM auth.users u
+ON CONFLICT (id) DO NOTHING;
+
+-- 7. Refresh PostgREST schema cache so API sees new table immediately
+NOTIFY pgrst, 'reload schema';

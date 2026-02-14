@@ -1,65 +1,20 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
 import { Bookmark } from "@/types";
-import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookmarkIcon, Inbox } from "lucide-react";
 import BookmarkItem from "./BookmarkItem";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 interface BookmarkListProps {
-  initialBookmarks: Bookmark[];
-  userId: string;
+  bookmarks: Bookmark[];
+  onBookmarkDeleted: (id: string) => void;
 }
 
 export default function BookmarkList({
-  initialBookmarks,
-  userId,
+  bookmarks,
+  onBookmarkDeleted,
 }: BookmarkListProps) {
-  const [bookmarks, setBookmarks] = useState<Bookmark[]>(initialBookmarks);
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    const channel = supabase
-      .channel("bookmarks-realtime")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "bookmarks",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const newBookmark = payload.new as Bookmark;
-          setBookmarks((prev) => {
-            if (prev.some((b) => b.id === newBookmark.id)) return prev;
-            return [newBookmark, ...prev];
-          });
-        }
-      )
-      .on(
-        "postgres_changes",
-        {
-          event: "DELETE",
-          schema: "public",
-          table: "bookmarks",
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const deletedId = payload.old.id as string;
-          setBookmarks((prev) => prev.filter((b) => b.id !== deletedId));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -103,7 +58,11 @@ export default function BookmarkList({
           <div className="space-y-2">
             <AnimatePresence mode="popLayout">
               {bookmarks.map((bookmark) => (
-                <BookmarkItem key={bookmark.id} bookmark={bookmark} />
+                <BookmarkItem
+                  key={bookmark.id}
+                  bookmark={bookmark}
+                  onDeleted={onBookmarkDeleted}
+                />
               ))}
             </AnimatePresence>
           </div>

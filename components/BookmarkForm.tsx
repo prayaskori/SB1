@@ -1,15 +1,21 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { Bookmark } from "@/types";
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Link, Type, Loader2, AlertCircle } from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, Link, Type, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
-export default function BookmarkForm() {
+interface BookmarkFormProps {
+  userId: string;
+  onBookmarkAdded: (bookmark: Bookmark) => void;
+}
+
+export default function BookmarkForm({ userId, onBookmarkAdded }: BookmarkFormProps) {
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -31,26 +37,20 @@ export default function BookmarkForm() {
 
     setLoading(true);
     const supabase = createClient();
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      toast.error("Session expired. Please sign in again.");
-      setLoading(false);
-      return;
-    }
-
-    const { error: insertError } = await supabase.from("bookmarks").insert({
-      title: title.trim(),
-      url: url.trim(),
-      user_id: user.id,
-    });
+    const { data: insertedBookmark, error: insertError } = await supabase
+      .from("bookmarks")
+      .insert({
+        title: title.trim(),
+        url: url.trim(),
+        user_id: userId,
+      })
+      .select("*")
+      .single();
 
     if (insertError) {
       toast.error(insertError.message);
     } else {
+      onBookmarkAdded(insertedBookmark as Bookmark);
       setTitle("");
       setUrl("");
       toast.success("Bookmark added successfully!");

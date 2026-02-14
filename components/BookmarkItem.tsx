@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 interface BookmarkItemProps {
   bookmark: Bookmark;
+  onDeleted: (id: string) => void;
 }
 
 function getFaviconUrl(url: string): string {
@@ -34,7 +35,7 @@ function formatDate(dateString: string): string {
   });
 }
 
-export default function BookmarkItem({ bookmark }: BookmarkItemProps) {
+export default function BookmarkItem({ bookmark, onDeleted }: BookmarkItemProps) {
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -50,6 +51,7 @@ export default function BookmarkItem({ bookmark }: BookmarkItemProps) {
       toast.error(`Failed to delete: ${deleteError.message}`);
       setDeleting(false);
     } else {
+      onDeleted(bookmark.id);
       toast.success("Bookmark deleted.");
     }
   };

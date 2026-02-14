@@ -1,9 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import DashboardClient from "@/components/DashboardClient";
-import { Bookmark, Profile } from "@/types";
+import ProfilePageClient from "@/components/ProfilePageClient";
+import { Profile } from "@/types";
 
-export default async function DashboardPage() {
+export default async function ProfilePage() {
   const supabase = await createClient();
 
   const {
@@ -14,12 +14,6 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const { data: bookmarks } = await supabase
-    .from("bookmarks")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false });
-
   const { data: profile } = await supabase
     .from("profiles")
     .select("*")
@@ -27,10 +21,9 @@ export default async function DashboardPage() {
     .maybeSingle();
 
   return (
-    <DashboardClient
+    <ProfilePageClient
       userId={user.id}
       userEmail={user.email ?? ""}
-      initialBookmarks={(bookmarks as Bookmark[]) ?? []}
       initialProfile={(profile as Profile | null) ?? null}
     />
   );
