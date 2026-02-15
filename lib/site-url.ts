@@ -14,17 +14,23 @@ function getConfiguredUrl() {
 }
 
 export function getBaseUrl(headers?: Headers) {
-  const configuredUrl = getConfiguredUrl();
-  if (configuredUrl) return configuredUrl;
-
   if (headers) {
     const forwardedHost = headers.get("x-forwarded-host");
     const forwardedProto = headers.get("x-forwarded-proto") ?? "https";
+    const host = headers.get("host");
 
     if (forwardedHost) {
       return `${forwardedProto}://${forwardedHost}`;
     }
+
+    if (host) {
+      const isLocalHost = host.startsWith("localhost") || host.startsWith("127.0.0.1");
+      return `${isLocalHost ? "http" : "https"}://${host}`;
+    }
   }
+
+  const configuredUrl = getConfiguredUrl();
+  if (configuredUrl) return configuredUrl;
 
   if (process.env.VERCEL_URL) {
     return `https://${process.env.VERCEL_URL}`;
