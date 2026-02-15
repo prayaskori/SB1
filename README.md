@@ -87,6 +87,7 @@ Create a `.env.local` file in the project root:
 NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=true
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### 6. Run Locally
@@ -110,6 +111,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
    - `NEXT_PUBLIC_SUPABASE_URL` → your Supabase project URL
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY` → your Supabase anon key
    - `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH` → `true`
+   - `NEXT_PUBLIC_APP_URL` → `https://<your-vercel-url>`
 5. Click **Deploy**.
 6. After deployment, copy the live URL (e.g., `https://smart-bookmark-app.vercel.app`).
 7. **Important:** Add the Vercel URL to your Google OAuth Authorized redirect URIs:
